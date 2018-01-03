@@ -7,6 +7,7 @@ class WayForPay
 {
     const PURCHASE_URL      = 'https://secure.wayforpay.com/pay';
     const API_URL           = 'https://api.wayforpay.com/api';
+    const MMS_API_URL       = 'https://api.wayforpay.com/mms/merchantBalance.php';
     const WIDGET_URL        = 'https://secure.wayforpay.com/server/pay-widget.js';
     const FIELDS_DELIMITER  = ';';
     const API_VERSION       = 1;
@@ -145,6 +146,24 @@ class WayForPay
     {
         $this->_prepare(self::MODE_TRANSACTION_LIST, $fields);
         return $this->_query();
+    }
+
+    public function merchantBalance()
+    {
+        $params['merchantAccount'] = $this->_merchant_account;
+        $params['merchantSignature'] = hash_hmac('md5', $this->_merchant_account, $this->_merchant_password);
+        $fields = json_encode($params);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, self::MMS_API_URL);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json;charset=utf-8'));
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return json_decode($response, true);
     }
 
     /**
